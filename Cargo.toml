@@ -1,0 +1,13 @@
+[package]
+name = "folderer"
+description = "Single-element folding collection"
+version = "0.1.0"
+authors = ["Leandro Lisboa Penz <lpenz@lpenz.org>"]
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/lpenz/folderer"
+repository = "https://github.com/lpenz/folderer"
+
+[dev-dependencies]
+anyhow = "1.0.42"
