@@ -3,17 +3,28 @@
 // file 'LICENSE', which is part of this source code package.
 
 #![warn(missing_debug_implementations)]
-// #![warn(missing_docs)]
+#![warn(missing_docs)]
 
 use std::iter::FromIterator;
 use std::marker::PhantomData;
 use std::mem;
 use std::ops;
 
+/// Core trait of the accumulator folding collection.
+///
+/// Implementation should implement this trait for the cooresponding
+/// [`Accumulator`] collection.
 pub trait Accumulable<Accum, Item> {
+    /// Returns an accumulator instance with the provided `item` folded in
+    ///
+    /// For example: in a summing accumulator, this would return `accum + item`
     fn fold(accum: Accum, item: Item) -> Accum;
 }
 
+/// Core `Accumulator` wrapper type that implementa `FromIterator` and `Extend`
+///
+/// This struct binds an inner accumulator type to an `Accumulable`
+/// instance by using a `PhantomData` marker.
 #[derive(Debug, Default)]
 pub struct Accumulator<Accum, Marker>(Accum, PhantomData<Marker>);
 
@@ -65,6 +76,8 @@ where
     }
 }
 
+/// Helper macro that implements [`Accumulable`] for a given
+/// [`Accumulator`] type using the provided function as `fold`.
 #[macro_export]
 macro_rules! impl_accumulable {
     ($folderer: ty, | $accum:ident : $accumtype: ty, $item:ident : $itemtype:ty | { $fn: expr }) => {
