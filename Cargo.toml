@@ -11,3 +11,4 @@ repository = "https://github.com/lpenz/folderer"
 
 [dev-dependencies]
 anyhow = "1.0.42"
+derive_more = "0.99.17"
