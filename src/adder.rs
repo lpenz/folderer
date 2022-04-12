@@ -6,6 +6,7 @@
 #![warn(missing_docs)]
 
 use std::iter;
+use std::marker;
 use std::ops;
 
 /// `Adder` type that folds values by using `+=`
@@ -17,29 +18,36 @@ use std::ops;
 /// Note: to use `FromIterator` (via `collect`) the `Inner` type must
 /// implement `Default`.
 #[derive(Debug, Default)]
-pub struct Adder<Inner>(pub Inner);
+pub struct Adder<Inner, Item>(pub Inner, marker::PhantomData<Item>);
 
-impl<Inner> Adder<Inner> {
+impl<Inner, Item> Adder<Inner, Item> {
     /// Returns the inner value of `Adder`, deconstructing it.
     pub fn into_inner(self) -> Inner {
         self.0
     }
-}
-
-impl<Inner> From<Inner> for Adder<Inner> {
-    fn from(inner: Inner) -> Self {
-        Self(inner)
+    /// Extend by one
+    pub fn fold(&mut self, item: Item)
+    where
+        Inner: ops::AddAssign<Item>,
+    {
+        self.0 += item;
     }
 }
 
-impl<Inner> ops::Deref for Adder<Inner> {
+impl<Inner, Item> From<Inner> for Adder<Inner, Item> {
+    fn from(inner: Inner) -> Self {
+        Self(inner, marker::PhantomData)
+    }
+}
+
+impl<Inner, Item> ops::Deref for Adder<Inner, Item> {
     type Target = Inner;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<Inner, Item> ops::AddAssign<Item> for Adder<Inner>
+impl<Inner, Item> ops::AddAssign<Item> for Adder<Inner, Item>
 where
     Inner: ops::AddAssign<Item>,
 {
@@ -48,23 +56,23 @@ where
     }
 }
 
-impl<Inner, Item> iter::FromIterator<Item> for Adder<Inner>
+impl<Inner, Item> iter::FromIterator<Item> for Adder<Inner, Item>
 where
     Inner: Default,
     Inner: ops::AddAssign<Item>,
 {
     fn from_iter<It: IntoIterator<Item = Item>>(iter: It) -> Self {
-        let mut accum = Adder::<Inner>::default();
-        iter.into_iter().for_each(|i| accum.0 += i);
-        accum
+        let mut adder = Adder::<Inner, Item>::from(Inner::default());
+        iter.into_iter().for_each(|i| adder.fold(i));
+        adder
     }
 }
 
-impl<Inner, Item> Extend<Item> for Adder<Inner>
+impl<Inner, Item> Extend<Item> for Adder<Inner, Item>
 where
     Inner: ops::AddAssign<Item>,
 {
     fn extend<It: IntoIterator<Item = Item>>(&mut self, iter: It) {
-        iter.into_iter().for_each(|i| self.0 += i);
+        iter.into_iter().for_each(|i| self.fold(i));
     }
 }

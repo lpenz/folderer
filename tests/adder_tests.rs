@@ -6,12 +6,13 @@ use folderer::*;
 
 use anyhow::Result;
 use derive_more::AddAssign;
+use std::ops;
 
 /* Test builtin type */
 
 #[test]
 fn test_builtin_usize() -> Result<()> {
-    let mut sum: Adder<usize> = (1..=5).collect();
+    let mut sum: Adder<usize, usize> = (1..=5).collect();
     eprintln!("{:?}", sum);
     assert_eq!(*sum, 15);
     sum.extend((6..=10).rev());
@@ -21,7 +22,7 @@ fn test_builtin_usize() -> Result<()> {
 
 #[test]
 fn test_builtin_f32() -> Result<()> {
-    let mut sum: Adder<f32> = (1..=5).map(|v| v as f32).collect();
+    let mut sum: Adder<f32, f32> = (1..=5).map(|v| v as f32).collect();
     assert_eq!(*sum, 15_f32);
     sum += 10_f32;
     assert_eq!(*sum, 25_f32);
@@ -32,14 +33,20 @@ fn test_builtin_f32() -> Result<()> {
 
 /* Test newtype wrapper with default */
 
-#[derive(Default, AddAssign, PartialEq, Eq, Debug)]
+#[derive(Default, PartialEq, Eq, Debug)]
 struct Usize1(usize);
+
+impl ops::AddAssign<usize> for Usize1 {
+    fn add_assign(&mut self, other: usize) {
+        self.0 += other;
+    }
+}
 
 #[test]
 fn test_newtype_with_default() -> Result<()> {
-    let mut sum: Adder<Usize1> = (1..=5).map(Usize1).collect();
+    let mut sum: Adder<Usize1, usize> = (1..=5).collect();
     assert_eq!(*sum, Usize1(15));
-    sum.extend((6..=10).map(Usize1).rev());
+    sum.extend((6..=10).rev());
     assert_eq!(*sum, Usize1(55));
     Ok(())
 }
@@ -51,7 +58,7 @@ struct Usize2(pub usize);
 
 #[test]
 fn test_newtype_without_default() -> Result<()> {
-    let mut sum = Adder::<Usize2>::from(Usize2(0));
+    let mut sum = Adder::<Usize2, Usize2>::from(Usize2(0));
     sum.extend((1..=5).map(Usize2).rev());
     assert_eq!((*sum).0, 15);
     Ok(())
@@ -73,7 +80,7 @@ impl std::ops::AddAssign<String> for Myvec {
 #[test]
 fn test_newtype_vec() -> Result<()> {
     let f = |v| format!("{}", v);
-    let mut vec: Adder<Myvec> = (1..=5).map(f).collect();
+    let mut vec: Adder<Myvec, String> = (1..=5).map(f).collect();
     vec.extend((6..10).map(f).rev());
     assert_eq!((*vec).0, vec!["1", "2", "3", "4", "5", "9", "8", "7", "6"]);
     assert_eq!(
