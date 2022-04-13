@@ -10,3 +10,6 @@
 
 mod adder;
 pub use self::adder::*;
+
+mod dynfolder;
+pub use self::dynfolder::*;

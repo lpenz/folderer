@@ -21,11 +21,11 @@ use std::ops;
 pub struct Adder<Inner, Item>(pub Inner, marker::PhantomData<Item>);
 
 impl<Inner, Item> Adder<Inner, Item> {
-    /// Returns the inner value of `Adder`, deconstructing it.
+    /// Deconstruct self and return the inner value.
     pub fn into_inner(self) -> Inner {
         self.0
     }
-    /// Extend by one
+    /// Fold value into self.
     pub fn fold(&mut self, item: Item)
     where
         Inner: ops::AddAssign<Item>,
@@ -62,9 +62,9 @@ where
     Inner: ops::AddAssign<Item>,
 {
     fn from_iter<It: IntoIterator<Item = Item>>(iter: It) -> Self {
-        let mut adder = Adder::<Inner, Item>::from(Inner::default());
-        iter.into_iter().for_each(|i| adder.fold(i));
-        adder
+        let mut autofolder = Adder::<Inner, Item>::from(Inner::default());
+        iter.into_iter().for_each(|i| autofolder.fold(i));
+        autofolder
     }
 }
 
